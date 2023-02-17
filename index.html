@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wørdel på norsk</title>
+
+    <style>
+      * {
+        margin: 0px;
+        padding: 0px;
+        box-sizing: border-box;
+        background-color: #121213;
+        color: #f3f3f3;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100%;
+      }
+
+      h1 {
+        z-index: 2;
+      }
+
+      .words-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+      }
+
+      .word-blocks {
+        display: grid;
+        grid-template-columns: repeat(5, 5rem);
+        z-index: 1;
+      }
+      .word-blocks div {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid #333;
+        height: 5rem;
+        font-size: 3rem;
+      }
+      .keyboard-container {
+        padding-top: 2rem;
+      }
+
+      .key-row button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 1px solid #333;
+        font-size: 2rem;
+        height: 5rem;
+        border-radius: 0.5rem;
+      }
+
+      .key-row {
+        display: grid;
+        grid-template-columns: repeat(11, 5rem);
+        gap: 0.5rem;
+        padding-top: 0.5rem;
+      }
+
+      #key-row-2 {
+        transform: translateX(1rem);
+      }
+      #key-row-3 {
+        transform: translateX(4rem);
+      }
+
+      #btn-Backspace {
+        width: 10rem;
+        font-size: 1rem;
+      }
+      #btn-Enter {
+        font-size: 1rem;
+      }
+
+      .clicked {
+        /* background-color: blue; */
+        box-shadow: rgb(204, 219, 232) 3px 3px 6px 0px inset,
+          rgba(255, 255, 255, 0.5) -3px -3px 6px 1px inset;
+      }
+
+      .hasLetter {
+        background-color: goldenrod;
+      }
+
+      .correctLetter {
+        background-color: greenyellow;
+      }
+
+      .wrongLetter {
+        background-color: dimgray;
+      }
+
+      .winnerGif {
+        display: flex;
+        gap: 30vw;
+        position: absolute;
+        z-index: 0;
+        transform: translateY(-60%);
+      }
+
+      .hideShow {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wørdel på norsk</h1>
+
+    <div class="words-container" id="main">
+      <div class="word-blocks" id="words"></div>
+    </div>
+
+    <div class="keyboard-container">
+      <div class="key-row" id="key-row-1"></div>
+      <div class="key-row" id="key-row-2"></div>
+      <div class="key-row" id="key-row-3"></div>
+    </div>
+    <div class="winnerGif hideShow" id="winGif">
+      <img src="1103-confetti-flat.webp" />
+      <img src="1103-confetti-flat.webp" />
+    </div>
+
+    <script>
+      let word;
+
+      //console.log(randomLetter, randomNumber);
+      getWord();
+
+      function getWord() {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ".split("");
+        const unwantedLetters = "èéëüúùóòöàáä";
+        let randomLetter = letters[Math.ceil(Math.random() * 28)];
+
+        const xhr = new XMLHttpRequest();
+        xhr.open(
+          "GET",
+          `https://ord.uib.no/api/suggest?q=${randomLetter}____&dict=bm`
+        );
+        xhr.send();
+        xhr.responseType = "json";
+        xhr.onload = () => {
+          if (xhr.readyState == 4 && xhr.status == 200) {
+            let responseArrayLength = xhr.response.a.freetext.length;
+            let randomNumber = Math.floor(
+              Math.random() * responseArrayLength + 1
+            );
+            //console.log(a);
+            //console.log(xhr.response.a.freetext);
+            //console.log(xhr.response.a.freetext[randomNumber][0]);
+            word = xhr.response.a.freetext[randomNumber][0];
+
+            for (unwantedLetter of unwantedLetters) {
+              if (word.indexOf(unwantedLetter) > -1) {
+                getWord();
+              }
+            }
+            console.log(word);
+          } else {
+            console.log(`Error: ${xhr.status}`);
+          }
+        };
+      }
+
+      const keyboadLetters = [
+        "q",
+        "w",
+        "e",
+        "r",
+        "t",
+        "y",
+        "u",
+        "i",
+        "o",
+        "p",
+        "å",
+        "a",
+        "s",
+        "d",
+        "f",
+        "g",
+        "h",
+        "j",
+        "k",
+        "l",
+        "ø",
+        "æ",
+        "z",
+        "x",
+        "c",
+        "v",
+        "b",
+        "n",
+        "m",
+        "Enter",
+        "Backspace",
+      ];
+      addKeyboadView();
+
+      function addKeyboadView() {
+        for (let i = 0; i < keyboadLetters.length; i++) {
+          let keyLetterDiv = document.createElement("button");
+          keyLetterDiv.id = "btn-" + keyboadLetters[i];
+          keyLetterDiv.dataset.value = keyboadLetters[i];
+          keyLetterDiv.textContent = keyboadLetters[i];
+          if (i <= keyboadLetters.indexOf("å")) {
+            document.getElementById("key-row-1").appendChild(keyLetterDiv);
+          } else if (i <= keyboadLetters.indexOf("æ")) {
+            document.getElementById("key-row-2").appendChild(keyLetterDiv);
+          } else if (i <= keyboadLetters.indexOf("Backspace")) {
+            document.getElementById("key-row-3").appendChild(keyLetterDiv);
+          }
+        }
+      }
+
+      let guessword = "";
+      let lastLetter;
+      function addToGuessword(key) {
+        //console.log(key);
+        if (guessword.length < 5) {
+          guessword += key;
+          lastLetter = guessword.length - 1;
+          console.log(guessword);
+          document.getElementById("btn-" + key).classList.add("clicked");
+        }
+      }
+
+      let button = document.getElementsByTagName("button");
+      for (let i = 0; i < button.length; i++) {
+        button[i].addEventListener("click", function () {
+          btnValue = button[i].getAttribute("data-value");
+          if (btnValue == "Enter") {
+            if (guessword.length == 5) {
+              guessAdd();
+              checkWin();
+              guessword = "";
+            }
+          } else if (btnValue == "Backspace") {
+            document
+              .getElementById("btn-" + guessword[lastLetter])
+              .classList.toggle("clicked");
+            guessword = guessword.substring(0, lastLetter);
+            console.log(guessword);
+          } else {
+            addToGuessword(btnValue);
+          }
+        });
+      }
+
+      addEventListener("keydown", function (e) {
+        document.getElementById("btn-" + e.key).click();
+      });
+
+      let guesses = [];
+      function guessAdd() {
+        document.getElementById("words").innerHTML = "";
+        guesses.push(guessword);
+        for (let i = 0; i < guesses.length; i++) {
+          //let guessLetter = guessword.split();
+          //console.log("first log: " + guessLetter);
+          for (let l = 0; l < guesses[i].length; l++) {
+            let guessLetter = guesses[i][l];
+            newGuessLetter = document.createElement("div");
+
+            if (guessLetter == word[l]) {
+              newGuessLetter.classList.add("correctLetter");
+              document
+                .getElementById("btn-" + guessLetter)
+                .classList.add("correctLetter");
+            } else if (word.includes(guessLetter)) {
+              newGuessLetter.classList.add("hasLetter");
+              document
+                .getElementById("btn-" + guessLetter)
+                .classList.add("hasLetter");
+            } else {
+              newGuessLetter.classList.add("wrongLetter");
+              document
+                .getElementById("btn-" + guessLetter)
+                .classList.add("wrongLetter");
+            }
+
+            newGuessLetter.textContent = guessLetter;
+            console.log(newGuessLetter);
+            document.getElementById("words").appendChild(newGuessLetter);
+            /* document
+              .getElementById("btn-" + guessLetter)
+              .classList.toggle("clicked"); */
+          }
+        }
+        removeClicked();
+      }
+
+      function checkWin() {
+        if (guessword == word) {
+          document.getElementById("winGif").classList.toggle("hideShow");
+        }
+      }
+
+      function removeClicked() {
+        const clicked = document.querySelectorAll(".clicked");
+        clicked.forEach((clickedBtn) => {
+          clickedBtn.classList.remove("clicked");
+        });
+      }
+    </script>
+    <!-- TODO check if guessword is legit word. -->
+    <!-- TODO add words to an array, let it start with 5 empty words and overwrite with guessword. -->
+    <!-- TODO Stop game at 5 guesses. -->
+    <!-- TODO Add spoilertag for Word. -->
+  </body>
+</html>
