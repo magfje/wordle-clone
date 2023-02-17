@@ -1,2 +1,3 @@
 # wordle-clone
- A wordle clone in norwegian
+
+A work-in-progress wordle clone in norwegian
